@@ -8,7 +8,7 @@ import { getAnalytics } from "firebase/analytics";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDTn9etdn9Rfao57QdAydYqk_2zb84Tp4g",
   authDomain: "multimind-de134.firebaseapp.com",
   projectId: "multimind-de134",
   storageBucket: "multimind-de134.firebasestorage.app",

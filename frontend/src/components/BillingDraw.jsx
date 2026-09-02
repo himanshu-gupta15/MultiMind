@@ -25,7 +25,7 @@ function BillingDraw({ open, onClose }) {
 
             // 2. Razorpay Checkout options
             const options = {
-                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_SyOUwg44vZwY2T",
 
                 // IMPORTANT
                 amount: data.order.amount,
