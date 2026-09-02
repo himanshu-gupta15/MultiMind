@@ -6,8 +6,8 @@ on:
       - main
 
 env:
-  AWS_REGION: ${{ secrets.AWS_REGION }}
-  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  AWS_REGION: ${{ secrets.AWS_REGION || 'ap-south-1' }}
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID || '547688237824' }}
 
 jobs:
 
@@ -139,36 +139,36 @@ jobs:
       - name: Deploy Gateway
         run: |
           aws ecs update-service \
-            --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service ${{ secrets.GATEWAY }} \
+            --cluster "${{ secrets.ECS_CLUSTER || 'backend' }}" \
+            --service "${{ secrets.GATEWAY_SERVICE || secrets.GATEWAY || 'gateway-service' }}" \
             --force-new-deployment
 
       - name: Deploy Auth
         run: |
           aws ecs update-service \
-            --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service ${{ secrets.AUTH_SERVICE }} \
+            --cluster "${{ secrets.ECS_CLUSTER || 'backend' }}" \
+            --service "${{ secrets.AUTH_SERVICE || 'auth-service' }}" \
             --force-new-deployment
 
       - name: Deploy Chat
         run: |
           aws ecs update-service \
-            --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service ${{ secrets.CHAT_SERVICE }} \
+            --cluster "${{ secrets.ECS_CLUSTER || 'backend' }}" \
+            --service "${{ secrets.CHAT_SERVICE || 'chat-service' }}" \
             --force-new-deployment
 
       - name: Deploy Agent
         run: |
           aws ecs update-service \
-            --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service ${{ secrets.AGENT_SERVICE }} \
+            --cluster "${{ secrets.ECS_CLUSTER || 'backend' }}" \
+            --service "${{ secrets.AGENT_SERVICE || 'agent-service' }}" \
             --force-new-deployment
 
       - name: Deploy Billing
         run: |
           aws ecs update-service \
-            --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service ${{ secrets.BILLING_SERVICE }} \
+            --cluster "${{ secrets.ECS_CLUSTER || 'backend' }}" \
+            --service "${{ secrets.BILLING_SERVICE || 'billing-service' }}" \
             --force-new-deployment
 
 
@@ -200,11 +200,11 @@ jobs:
         run: |
           aws s3 sync \
             frontend/dist \
-            s3://${{ secrets.S3_BUCKET }} \
+            s3://${{ secrets.S3_BUCKET || 'multimind-frontend-547688237824-ap-south-1-an' }} \
             --delete
 
       - name: Invalidate CloudFront
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --distribution-id "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID || 'ER6SC9GAB2F2Y' }}" \
             --paths "/*"
