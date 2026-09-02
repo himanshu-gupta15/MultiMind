@@ -10,7 +10,7 @@ import { proxyWithHeader } from "./utils/proxyWithHeader.js";
 
 dotenv.config();
 
-const port = process.env.PORT || 8000; 
+const port = process.env.PORT || 8000;
 const app = express();
 
 app.set("trust proxy", 1);
@@ -47,7 +47,7 @@ app.use("/api/billing", protect, proxyWithHeader(process.env.BILLING_SERVICE_URL
 app.get("/api/me", protect, getCurrentUser);
 
 app.get("/", (req, res) => {
-    res.json({ message: "hello from gateway" });
+    res.json({ message: "hello from gateway V2" });
 });
 
 app.listen(port, () => {
