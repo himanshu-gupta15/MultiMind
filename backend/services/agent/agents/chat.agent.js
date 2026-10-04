@@ -45,7 +45,11 @@ Formatting:
             new SystemMessage(systemPrompt)
         ];
 
-        history.forEach(msg => {
+        // The current prompt is saved before the graph runs, so drop it from history to avoid sending it twice
+        const last = history[history.length - 1];
+        const pastMessages = last?.role === "user" && last.content === state.prompt ? history.slice(0, -1) : history;
+
+        pastMessages.forEach(msg => {
             if (msg.role === "user") {
                 messages.push(new HumanMessage(msg.content));
             } else {

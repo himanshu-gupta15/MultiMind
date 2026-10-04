@@ -10,7 +10,7 @@ export const getMemory = async (conversationId) => {
     }
 
     const messages = await getMessages(conversationId);
-    const safeMessages = messages || [];
+    const safeMessages = (messages || []).slice(-20);
     await redis.set(key, JSON.stringify(safeMessages), "EX", 60 * 60 * 24); // 1 day expiration
     return safeMessages;
 };

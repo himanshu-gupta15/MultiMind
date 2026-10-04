@@ -1,5 +1,4 @@
 import redis from "../../../shared/redis/redis.js";
-import { addMessage } from "../config/memory.js";
 import axios from "axios";
 import Graph from "../graph/graph.js";
 
@@ -50,10 +49,6 @@ export const agent = async (req, res, next) => {
             "Agent response timed out. Please try again."
         );
 
-        const response = result.aiResponse;
-        addMessage(conversationId, "user", prompt);
-        await addMessage(conversationId, "assistant", response);
-
         await axios.post(`${process.env.CHAT_SERVICE_URL}/save-message`, {
             conversationId,
             role: "assistant",
@@ -61,6 +56,7 @@ export const agent = async (req, res, next) => {
             images: result?.images,
             artifacts: result?.artifacts
         });
+        await redis.del(`messages-${conversationId}`);
 
         return res.status(200).json({
             answer: result.aiResponse,
