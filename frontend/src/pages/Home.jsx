@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux'
 import Sidebar from '../components/Sidebar.jsx'
 import ChatArea from '../components/ChatArea.jsx'
 import Artifact from '../components/Artifact.jsx'
+import BillingDraw from '../components/BillingDraw.jsx'
 
 function Home() {
   const dispatch = useDispatch()
@@ -35,31 +36,29 @@ function Home() {
     console.log(data)
   }
   return (
-    <div className='h-screen min-w-0 flex bg-[#0d0f14] text-white overflow-hidden'>
+    <div className='h-dvh min-w-0 flex bg-canvas text-ink font-sans overflow-hidden relative'>
       <Sidebar />
       <ChatArea />
       <Artifact />
-      {!userData && (<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur'>
-
-        <div className='w-[340px] bg-[#13151c] border border-white/[0.08] rounded-2xl p-7 flex flex-col gap-5'>
-          <div className='flex flex-col gap-1'>
-            <h2 className='text-[17px] font-semibold text-slate-100 tracking-tight'>Welcome to MultiMind
-
-            </h2>
-            <p className='text-[13px] text-slate-500'>Please login to continue using the app.</p>
+      <BillingDraw />
+      {!userData && (
+        <div className='fixed inset-0 z-80 grid place-items-center p-4 bg-sand-900/50 backdrop-blur-sm'>
+          <div className='w-full max-w-100 flex flex-col gap-4 px-6 pt-9 pb-6 rounded-[32px] bg-canvas shadow-soft-lg'>
+            <div className='w-12 h-12 rounded-full bg-clay text-canvas grid place-items-center font-display text-2xl'>M</div>
+            <div className='flex flex-col gap-1.5'>
+              <h2 className='font-display text-[26px] leading-tight'>Welcome to MultiMind</h2>
+              <p className='text-sm text-ink/85 leading-relaxed'>Sign in to keep your chats, files and credits in sync across devices.</p>
+            </div>
+            <button
+              className='w-full h-12 flex items-center justify-center gap-2.5 rounded-full bg-clay hover:bg-clay-600 active:bg-clay-700 text-canvas text-[15px] font-semibold cursor-pointer transition-colors'
+              onClick={googleLogin}
+            >
+              <FcGoogle size={17} className='bg-canvas rounded-full p-px' />
+              Continue with Google
+            </button>
           </div>
-          <button
-            className='w-full flex items-center justify-center gap-3 py-[11px] rounded-xl text-sm font-medium text-black/90 bg-white hover:bg-gray-200 transition-all duration-150 cursor-pointer'
-            onClick={googleLogin}
-          >
-            <FcGoogle size={15} />
-            Continue with Google
-          </button>
-
         </div>
-      </div>
       )}
-
     </div>
   )
 }

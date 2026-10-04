@@ -33,11 +33,11 @@ function ChatArea() {
     getMesg()
   }, [selectedConversation?._id])
   return (
-    <div className='flex-1 min-w-0 flex flex-col'>
+    <main className='flex-1 min-w-0 h-full flex flex-col'>
       <Nav />
       <MessageList />
       <Chatinput />
-    </div>
+    </main>
   )
 }
 

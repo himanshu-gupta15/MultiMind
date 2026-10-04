@@ -1,8 +1,8 @@
-import { Code2, FileText, MessageSquare, Presentation, Send, X, Zap, Image, Globe, Paperclip, Mic, MicOff } from 'lucide-react';
+import { Code2, FileText, MessageSquare, Presentation, ArrowUp, X, Zap, Image, Globe, Paperclip, Mic } from 'lucide-react';
 import React, { useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import sendMessage from '../features/sendMessage';
-import { addMessage, setArtifacts, setIsLoading } from '../redux/messageSlice';
+import { addMessage, setArtifacts, setIsLoading, setPendingPrompt } from '../redux/messageSlice';
 import { addConversation, setSelectedConversation, setConvTitle } from '../redux/conversationSlice';
 import { createConversation } from '../features/createConversation';
 import { updateConversation } from '../features/updateConversation';
@@ -17,7 +17,7 @@ function Chatinput() {
   const fileRef = useRef(null)
 
   const dispatch = useDispatch()
-  const { isLoading } = useSelector(state => state.message)
+  const { isLoading, pendingPrompt } = useSelector(state => state.message)
   const { selectedConversation } = useSelector(state => state.conversation)
 
   const canSend = (value.trim().length > 0 || Boolean(selectedFile)) && !isLoading;
@@ -52,6 +52,7 @@ function Chatinput() {
   const toggleMic = () => {
     if (!recognitionRef.current) {
       alert("speech recognition not supported")
+      return
     }
     if (listening) {
       recognitionRef.current.stop()
@@ -64,8 +65,9 @@ function Chatinput() {
 
 
 
-  const handleSendMessage = async () => {
-    const trimmed = value.trim();
+  const handleSendMessage = async (overrideText, overrideAgent) => {
+    const trimmed = (overrideText ?? value).trim();
+    const agentToUse = overrideAgent || selectedAgent;
     if ((!trimmed && !selectedFile) || isLoading) return;
 
     const promptText = trimmed || (selectedFile ? `Analyze uploaded file: ${selectedFile.name}` : "");
@@ -127,7 +129,7 @@ function Chatinput() {
 
       formData.append("prompt", promptText);
       formData.append("conversationId", conversationId);
-      formData.append("agent", selectedAgent.toLowerCase());
+      formData.append("agent", agentToUse.toLowerCase());
       if (fileToSend) {
         formData.append("file", fileToSend);
       }
@@ -158,6 +160,13 @@ function Chatinput() {
       }));
     }
   };
+
+  // Suggestion cards on the empty state hand us a prompt to send
+  useEffect(() => {
+    if (!pendingPrompt) return;
+    dispatch(setPendingPrompt(null));
+    handleSendMessage(pendingPrompt.text, pendingPrompt.agent);
+  }, [pendingPrompt]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -206,11 +215,13 @@ function Chatinput() {
     }
   ]
 
+  const iconBtn = 'w-9 h-9 rounded-full grid place-items-center cursor-pointer transition-colors';
+
   return (
-    <div className='w-full overflow-hidden px-4 md:px-6 py-4 border-t border-white/[0.06] bg-[#0d0f14] shrink-0'>
-      <div className='w-full max-w-4xl mx-auto flex flex-col gap-3.5'>
-        {/* Agent/Mode Switcher */}
-        <div className='flex items-center gap-2 overflow-x-auto pb-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden w-full'>
+    <div className='shrink-0 px-4 md:px-6.5 pb-4'>
+      <div className='max-w-195 mx-auto flex flex-col gap-2'>
+        {/* Agent switcher */}
+        <div className='flex gap-1.5 overflow-x-auto no-scrollbar p-0.5'>
           {agents.map((agent) => {
             const isActive = selectedAgent === agent.label;
             const Icon = agent.icon;
@@ -218,123 +229,92 @@ function Chatinput() {
               <button
                 key={agent.id}
                 onClick={() => setSelectedAgent(agent.label)}
-                className={`
-                  flex-shrink-0 cursor-pointer inline-flex items-center gap-1.5 
-                  px-3.5 py-2 rounded-full text-xs font-semibold border transition-all duration-200
+                className={`shrink-0 inline-flex items-center gap-1.5 h-8 px-3.25 rounded-full border text-[13px] font-semibold cursor-pointer transition-colors
                   ${isActive
-                    ? "bg-gradient-to-r from-indigo-500 to-violet-600 text-white border-transparent shadow-[0_2px_10px_rgba(99,102,241,0.3)] scale-[1.02]"
-                    : "bg-white/[0.03] text-slate-400 border-white/[0.06] hover:bg-white/[0.07] hover:text-slate-200"
-                  }
-                `}
+                    ? "bg-sage-200 text-sage-900 border-sage-400"
+                    : "bg-transparent text-sand-800 border-line hover:bg-ink/6"
+                  }`}
               >
-                <Icon
-                  size={13.5}
-                  className={isActive ? "text-white" : "text-slate-500"}
-                />
+                <Icon size={13} />
                 {agent.label}
               </button>
             );
           })}
         </div>
 
-        {/* Input Card Container */}
-        <div className='flex flex-col gap-2.5 bg-white/[0.03] border border-white/[0.07] focus-within:border-indigo-500/40 focus-within:bg-white/[0.045] focus-within:shadow-[0_0_24px_rgba(99,102,241,0.08)] rounded-2xl p-4 transition-all duration-200'>
+        {/* Composer */}
+        <div className='flex flex-col gap-2 py-3 pr-3 pl-4.5 rounded-panel bg-sand-100 shadow-soft-md'>
+          {selectedFile && (
+            <div className='self-start flex items-center gap-2.5 py-1.5 pr-1.5 pl-3 rounded-full bg-surface'>
+              {selectedFile.type.startsWith("image/") ? (
+                <img src={URL.createObjectURL(selectedFile)} className='w-6 h-6 rounded-full object-cover' alt="" />
+              ) : (
+                <FileText size={15} className='text-clay-700' />
+              )}
+              <span className='text-[13px] font-semibold max-w-55 truncate'>{selectedFile?.name}</span>
+              <span className='text-xs text-sand-700'>{Math.ceil(selectedFile.size / 1024)} KB</span>
+              <button
+                type='button'
+                title="Remove file"
+                className='w-6 h-6 rounded-full grid place-items-center text-sand-700 hover:bg-sand-300 cursor-pointer'
+                onClick={() => { setSelectedFile(null); if (fileRef.current) fileRef.current.value = ""; }}
+              >
+                <X size={13} />
+              </button>
+            </div>
+          )}
 
-          {/* Text Area */}
           <textarea
-            placeholder='Ask Anything... (Press Enter to send, Shift+Enter for new line)'
+            placeholder={selectedAgent === "Auto" ? "Ask anything…" : `Message the ${selectedAgent} agent…`}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
             value={value}
             disabled={isLoading}
-            className='w-full bg-transparent outline-none resize-none text-[14px] text-slate-200 placeholder:text-slate-600 leading-relaxed [scrollbar-width:none] [&::-webkit-scrollbar]:hidden disabled:opacity-50 min-h-[56px]'
-            rows={3}
+            rows={2}
+            className='w-full bg-transparent border-none outline-none resize-none text-[15px] leading-relaxed pt-1.5 min-h-13 max-h-50 placeholder:text-sand-600 disabled:opacity-60'
           />
 
-          {/* Selected File Attachment Preview */}
-          {selectedFile && (
-            <div className='mt-1 mb-2'>
-              <div className='inline-flex items-center gap-3 rounded-xl bg-white/[0.03] border border-white/[0.06] px-3.5 py-2 shadow-sm'>
-                {selectedFile?.type === "application/pdf" ? (
-                  <FileText size={18} className='text-red-400 shrink-0' />
-                ) : (
-                  selectedFile.type.startsWith("image/") && (
-                    <img
-                      src={URL.createObjectURL(selectedFile)}
-                      className='h-9 w-9 rounded-lg object-cover shrink-0'
-                      alt="preview"
-                    />
-                  )
-                )}
-                <div className='min-w-0 max-w-[180px]'>
-                  <p className='text-xs font-medium text-slate-200 truncate'>
-                    {selectedFile?.name}
-                  </p>
-                  <p className='text-[10px] text-slate-500 mt-0.5'>
-                    {Math.ceil(selectedFile.size / 1024)} KB
-                  </p>
-                </div>
-                <button
-                  type='button'
-                  className='ml-1.5 p-1 rounded-md hover:bg-white/[0.08] text-slate-400 hover:text-white transition-colors cursor-pointer border-none bg-transparent'
-                  onClick={() => { setSelectedFile(null); if (fileRef.current) fileRef.current.value = ""; }}
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Action Row */}
-          <div className='flex items-center justify-between pt-2.5 border-t border-white/[0.04]'>
-            <div className='flex items-center gap-1'>
-              <input
-                type='file'
-                accept='.pdf,image/*'
-                hidden
-                ref={fileRef}
-                onChange={(e) => {
-                  const file = e.target.files[0];
-                  if (file) {
-                    setSelectedFile(file);
-                  }
-                }}
-              />
-
-              <button
-                type='button'
-                className='flex items-center justify-center w-8 h-8 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-white/[0.05] transition-all duration-150 bg-transparent border-none cursor-pointer'
-                onClick={() => fileRef.current.click()}
-              >
-                <Paperclip size={16} />
-              </button>
-
-
-              <button
-                onClick={toggleMic}
-                className={`flex items-center justify-center w-8 h-8 rounded-lg  transition-all duration-150  cursor-pointer ${listening
-                  ? "bg-red-500 text-white"
-                  : "text-slate-600 hover:bg-white/[0.05]"
-                  }`}
-              >
-                {listening ? <Mic size={16} /> : <MicOff size={16} />}
-              </button>
-            </div>
-
+          <div className='flex items-center gap-1'>
+            <input
+              type='file'
+              accept='.pdf,image/*'
+              hidden
+              ref={fileRef}
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  setSelectedFile(file);
+                }
+              }}
+            />
             <button
-
               type='button'
-              onClick={handleSendMessage}
-              disabled={!canSend}
-              className={`flex items-center justify-center w-8 h-8 rounded-lg border-none transition-all duration-200 ${canSend
-                ? "bg-gradient-to-br from-indigo-500 to-violet-700 hover:opacity-90 shadow-md shadow-indigo-500/10 hover:shadow-indigo-500/20 text-white hover:scale-[1.04] cursor-pointer"
-                : "bg-white/[0.04] text-slate-600 cursor-not-allowed opacity-40"
-                }`}
+              title="Attach a PDF or image"
+              className={`${iconBtn} text-sand-700 hover:bg-sand-200`}
+              onClick={() => fileRef.current.click()}
             >
-              <Send size={14} />
+              <Paperclip size={17} />
+            </button>
+            <button
+              type='button'
+              title={listening ? "Stop dictation" : "Dictate"}
+              onClick={toggleMic}
+              className={`${iconBtn} ${listening ? "bg-clay-200 text-clay-800 hover:bg-clay-300" : "text-sand-700 hover:bg-sand-200"}`}
+            >
+              <Mic size={17} />
+            </button>
+            <div className='flex-1' />
+            <span className='hidden md:inline text-xs text-sand-700 mr-2'>Enter to send · Shift + Enter for a new line</span>
+            <button
+              type='button'
+              title="Send"
+              onClick={() => handleSendMessage()}
+              disabled={!canSend}
+              className='w-10 h-10 rounded-full grid place-items-center bg-clay hover:bg-clay-600 active:bg-clay-700 text-canvas cursor-pointer transition-colors disabled:opacity-45 disabled:cursor-not-allowed disabled:hover:bg-clay'
+            >
+              <ArrowUp size={18} />
             </button>
           </div>
-
         </div>
       </div>
     </div>

@@ -6,10 +6,13 @@ import { createOrder } from "../features/createOrder";
 import { verifyPayment } from "../features/verifyPayment";
 import getCurrentUser from "../features/getCurrentUser";
 import { setUserdata } from "../redux/userSlice";
+import { setBillingOpen } from "../redux/uiSlice";
 
-function BillingDraw({ open, onClose }) {
+function BillingDraw() {
     const { userData } = useSelector((state) => state.user);
+    const open = useSelector((state) => state.ui.billingOpen);
     const dispatch = useDispatch();
+    const onClose = () => dispatch(setBillingOpen(false));
 
     const handleUpgrade = async (plan) => {
         try {
@@ -42,7 +45,7 @@ function BillingDraw({ open, onClose }) {
                 },
 
                 theme: {
-                    color: "#6366f1",
+                    color: "#c67139",
                 },
 
                 handler: async (response) => {
@@ -105,150 +108,105 @@ function BillingDraw({ open, onClose }) {
         }
     };
 
+    const credits = userData?.credits || 0;
+    const totalCredits = userData?.totalCredits || 100;
+    const currentPlan = userData?.plan || "free";
+    const plans = [
+        { id: "starter", name: "Starter", price: "₹199", credits: "500 credits" },
+        { id: "pro", name: "Pro", price: "₹499", credits: "1,000 credits", featured: true }
+    ];
+
     return (
         <AnimatePresence>
             {open && (
                 <>
-                    {/* Overlay */}
                     <motion.div
                         initial={{ opacity: 0 }}
-                        animate={{ opacity: 0.5 }}
+                        animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black z-40"
+                        className="fixed inset-0 z-60 bg-sand-900/45"
                     />
 
-                    {/* Drawer */}
-                    <motion.div
+                    <motion.aside
                         initial={{ x: "100%" }}
                         animate={{ x: 0 }}
                         exit={{ x: "100%" }}
                         transition={{ duration: 0.25 }}
-                        className="fixed right-0 top-0 z-50 h-screen w-[380px] border-l border-white/10 shadow-2xl flex flex-col"
-                        style={{
-                            background:
-                                "radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.38) 0%, rgba(59, 130, 246, 0.18) 40%, rgba(10, 11, 15, 0) 75%), #0a0b0e",
-                        }}
+                        className="fixed right-0 top-0 bottom-0 z-61 w-full max-w-105 p-6.5 bg-canvas rounded-l-panel shadow-soft-lg flex flex-col gap-4.5 overflow-y-auto"
                     >
-                        {/* Header */}
-                        <div className="flex items-center justify-between p-5 border-b border-white/10">
-                            <div>
-                                <div className="text-white text-lg font-semibold">
-                                    Billing
-                                </div>
-
-                                <div className="text-slate-400 text-sm">
-                                    Plans & Credits
-                                </div>
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex flex-col gap-1">
+                                <h2 className="m-0 font-display text-[26px] leading-tight">Plans &amp; credits</h2>
+                                <p className="m-0 text-sm text-sand-700">Every message, file and image uses credits.</p>
                             </div>
-
                             <button
                                 onClick={onClose}
-                                className="w-9 h-9 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center border-none cursor-pointer"
+                                title="Close"
+                                className="w-9 h-9 rounded-full grid place-items-center text-sand-700 hover:bg-ink/7 cursor-pointer shrink-0"
                             >
-                                <X
-                                    size={18}
-                                    className="text-slate-300"
-                                />
+                                <X size={18} />
                             </button>
                         </div>
 
-                        {/* Current Plan */}
-                        <div className="p-5">
-                            <div className="rounded-xl bg-white/[0.04] border border-white/10 p-4">
-                                <div className="flex justify-between items-center">
-                                    <div>
-                                        <p className="text-slate-400 text-sm">
-                                            Current Plan
-                                        </p>
-
-                                        <h3 className="text-white capitalize font-semibold">
-                                            {userData?.plan || "free"}
-                                        </h3>
-                                    </div>
-
-                                    <Crown className="text-yellow-400" />
+                        <div className="flex flex-col gap-3 p-4.5 rounded-[32px] bg-surface">
+                            <div className="flex items-center justify-between">
+                                <div className="flex flex-col gap-0.5">
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-clay-700">Current plan</span>
+                                    <span className="font-display text-[22px] leading-tight capitalize">{currentPlan}</span>
                                 </div>
-
-                                <div className="mt-5">
-                                    <div className="flex justify-between text-xs text-slate-400 mb-2">
-                                        <span>Credits</span>
-
-                                        <span>
-                                            {userData?.credits || 0}/
-                                            {userData?.totalCredits || 100}
-                                        </span>
-                                    </div>
-
-                                    <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                                        <div
-                                            className="h-full bg-indigo-500 transition-all duration-500"
-                                            style={{
-                                                width: `${Math.min(
-                                                    ((userData?.credits || 0) /
-                                                        (userData?.totalCredits ||
-                                                            100)) *
-                                                    100,
-                                                    100
-                                                )}%`,
-                                            }}
-                                        />
-                                    </div>
+                                <span className="w-11 h-11 rounded-full grid place-items-center bg-clay-200 text-clay-800">
+                                    <Crown size={19} />
+                                </span>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <div className="flex justify-between text-[13px]">
+                                    <span className="font-semibold">Credits left</span>
+                                    <span className="text-sand-700">{credits} / {totalCredits}</span>
+                                </div>
+                                <div className="h-2.5 rounded-full bg-sage-200 overflow-hidden">
+                                    <div
+                                        className="h-full rounded-full bg-sage-600 transition-[width] duration-500"
+                                        style={{ width: `${Math.min((credits / totalCredits) * 100, 100)}%` }}
+                                    />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Plans */}
-                        <div className="px-5 flex-1 overflow-auto space-y-4">
-                            {/* Starter */}
-                            <div className="rounded-xl border border-white/10 p-4 bg-white/[0.02]">
-                                <h3 className="text-white font-semibold">
-                                    Starter Plan
-                                </h3>
-
-                                <p className="text-indigo-400 text-2xl font-bold mt-2">
-                                    ₹199
-                                </p>
-
-                                <p className="text-slate-400 text-sm mt-1">
-                                    500 Credits
-                                </p>
-
-                                <button
-                                    onClick={() =>
-                                        handleUpgrade("starter")
-                                    }
-                                    className="mt-4 w-full rounded-lg bg-indigo-600 hover:bg-indigo-700 py-2 text-white border-none cursor-pointer font-medium transition-colors"
-                                >
-                                    Upgrade
-                                </button>
-                            </div>
-
-                            {/* Pro */}
-                            <div className="rounded-xl border border-white/10 p-4 bg-white/[0.02]">
-                                <h3 className="text-white font-semibold">
-                                    Pro Plan
-                                </h3>
-
-                                <p className="text-indigo-400 text-2xl font-bold mt-2">
-                                    ₹499
-                                </p>
-
-                                <p className="text-slate-400 text-sm mt-1">
-                                    1000 Credits
-                                </p>
-
-                                <button
-                                    onClick={() =>
-                                        handleUpgrade("pro")
-                                    }
-                                    className="mt-4 w-full rounded-lg bg-indigo-600 hover:bg-indigo-700 py-2 text-white border-none cursor-pointer font-medium transition-colors"
-                                >
-                                    Upgrade
-                                </button>
-                            </div>
+                        <div className="flex flex-col gap-3">
+                            {plans.map((plan) => {
+                                const isCurrent = currentPlan === plan.id;
+                                return (
+                                    <div
+                                        key={plan.id}
+                                        className={`flex flex-col gap-3 p-4.5 rounded-panel border-2 bg-sand-100 ${plan.featured ? "border-sage-400" : "border-transparent"}`}
+                                    >
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="text-base font-bold">{plan.name}</span>
+                                            {plan.featured && (
+                                                <span className="px-2.5 py-0.75 rounded-full bg-sage-100 text-sage-800 text-[11px] font-bold">Best value</span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="font-display text-[34px] leading-none">{plan.price}</span>
+                                            <span className="text-sm text-sand-700">{plan.credits}</span>
+                                        </div>
+                                        <button
+                                            onClick={() => handleUpgrade(plan.id)}
+                                            disabled={isCurrent}
+                                            className={`h-10.5 rounded-full text-sm font-semibold cursor-pointer transition-colors disabled:opacity-45 disabled:cursor-not-allowed ${plan.featured
+                                                ? "bg-clay hover:bg-clay-600 active:bg-clay-700 text-canvas"
+                                                : "border border-line hover:bg-ink/7"
+                                                }`}
+                                        >
+                                            {isCurrent ? "Current plan" : `Upgrade to ${plan.name}`}
+                                        </button>
+                                    </div>
+                                );
+                            })}
                         </div>
-                    </motion.div>
+                        <p className="m-0 text-xs text-sand-700">Payments are processed securely by Razorpay.</p>
+                    </motion.aside>
                 </>
             )}
         </AnimatePresence>

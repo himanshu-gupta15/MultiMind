@@ -1,113 +1,94 @@
 @import "tailwindcss";
 
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+/* Organic theme: warm sand ground, clay accent, sage secondary.
+   Tokens become utilities, e.g. bg-canvas, text-ink, bg-clay-100, text-sage-800. */
+@theme {
+  --color-canvas: #f5ead8;
+  --color-surface: #ebddc5;
+  --color-ink: #201e1d;
+  --color-line: color-mix(in srgb, #201e1d 16%, transparent);
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  --color-sand-100: #f9f4ed;
+  --color-sand-200: #eee7db;
+  --color-sand-300: #dcd3c4;
+  --color-sand-400: #c0b6a5;
+  --color-sand-500: #a19786;
+  --color-sand-600: #82796a;
+  --color-sand-700: #645c50;
+  --color-sand-800: #474238;
+  --color-sand-900: #2e2b25;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --color-clay: #c67139;
+  --color-clay-100: #fff2eb;
+  --color-clay-200: #ffe1d0;
+  --color-clay-300: #ffc6a5;
+  --color-clay-400: #f6a06b;
+  --color-clay-500: #d67f48;
+  --color-clay-600: #b2622d;
+  --color-clay-700: #8c491a;
+  --color-clay-800: #643312;
+  --color-clay-900: #402310;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  --color-sage-100: #f0fae1;
+  --color-sage-200: #e1eecc;
+  --color-sage-300: #ccdbb2;
+  --color-sage-400: #aebf92;
+  --color-sage-500: #8fa073;
+  --color-sage-600: #728157;
+  --color-sage-700: #56633f;
+  --color-sage-800: #3d472b;
+  --color-sage-900: #272e1b;
+
+  --font-sans: "Figtree", system-ui, sans-serif;
+  --font-display: "Caprasimo", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  --radius-card: 16px;
+  --radius-panel: 28px;
+
+  --shadow-soft-sm: 0 1px 2px color-mix(in srgb, #2e2b25 14%, transparent);
+  --shadow-soft-md: 0 3px 10px color-mix(in srgb, #2e2b25 16%, transparent);
+  --shadow-soft-lg: 0 12px 32px color-mix(in srgb, #2e2b25 22%, transparent);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
+html,
 body {
   margin: 0;
+  height: 100%;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
 }
 
 #root {
-  width: 100%;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+  height: 100%;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+:focus {
+  outline: none;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
+:focus-visible {
+  outline: 2px solid var(--color-clay);
+  outline-offset: 2px;
 }
 
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
+::selection {
+  background: color-mix(in srgb, var(--color-clay) 30%, transparent);
 }
 
-p {
-  margin: 0;
+.no-scrollbar {
+  scrollbar-width: none;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+@keyframes mm-dot {
+  0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-3px); }
 }

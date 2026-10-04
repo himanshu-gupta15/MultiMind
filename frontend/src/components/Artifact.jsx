@@ -2,7 +2,6 @@ import {
   Code2, 
   Copy, 
   Eye, 
-  PanelRightClose, 
   Check, 
   X, 
   RotateCw, 
@@ -14,18 +13,19 @@ import {
   Smartphone 
 } from 'lucide-react';
 import React, { useState, useMemo } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { setArtifactOpen, setMobileArtifactOpen } from '../redux/uiSlice';
 import Editor from '@monaco-editor/react';
 import { motion, AnimatePresence } from 'motion/react';
 
 function Artifact() {
-  const [collapsed, setCollapsed] = useState(false);
+  const dispatch = useDispatch();
+  const { artifactOpen, mobileArtifactOpen } = useSelector(state => state.ui);
   const [isExpanded, setIsExpanded] = useState(false);
   const { artifacts } = useSelector(state => state.message);
   const [tab, setTab] = useState("preview");
   const [activeFile, setActiveFile] = useState(0);
   const [copied, setCopiedCode] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [viewportMode, setViewportMode] = useState("desktop"); // 'desktop' | 'tablet' | 'mobile'
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -140,238 +140,174 @@ function Artifact() {
     }
   };
 
-  const PanelContent = ({ onClose }) => {
-    return (
-      <div className='flex flex-col h-full bg-[#0d0f14]'>
-        {/* Main Header */}
-        <div className='h-14 px-3.5 border-b border-white/[0.06] flex items-center justify-between gap-2 shrink-0 bg-[#0d0f14]'>
-          <div className='flex items-center gap-2.5 min-w-0'>
-            <button 
-              className='flex items-center justify-center w-7 h-7 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/[0.06] transition-colors bg-transparent border-none cursor-pointer shrink-0'
-              onClick={onClose || (() => setCollapsed(true))}
-              title="Close panel"
-            >
-              {onClose ? <X size={15} /> : <PanelRightClose size={15} />}
-            </button>
-            <div className='flex items-center gap-2 min-w-0'>
-              <Code2 className="text-indigo-400 shrink-0" size={14} />
-              <span className='text-[13px] font-medium text-slate-200 truncate'>
-                {artifacts[0]?.title || "Artifact Preview"}
-              </span>
-            </div>
-          </div>
+  const defineTheme = (monaco) => {
+    monaco.editor.defineTheme('organic', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [],
+      colors: { 'editor.background': '#2e2b25', 'editor.lineHighlightBackground': '#2e2b25' }
+    });
+  };
 
-          <div className='flex items-center gap-1.5 shrink-0'>
-            {canPreview && (
-              <div className='flex items-center gap-1 bg-white/[0.04] border border-white/[0.06] p-0.5 rounded-lg'>
-                <button 
-                  onClick={() => setTab("preview")}
-                  className={`flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-md transition-colors cursor-pointer border-none ${tab === "preview" ? "bg-indigo-600 text-white shadow-sm" : "bg-transparent text-slate-400 hover:text-slate-200"}`}
-                >
-                  <Eye size={12} />Preview
-                </button>
-                <button 
-                  onClick={() => setTab("code")}
-                  className={`flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-md transition-colors cursor-pointer border-none ${tab === "code" ? "bg-indigo-600 text-white shadow-sm" : "bg-transparent text-slate-400 hover:text-slate-200"}`}
-                >
-                  <Code2 size={12} />Code
-                </button>
-              </div>
-            )}
+  const iconBtn = 'w-8 h-8 rounded-full grid place-items-center text-sand-700 hover:bg-sand-200 cursor-pointer shrink-0 transition-colors';
+  const textBtn = 'h-8 px-3 flex items-center gap-1.5 rounded-full text-xs font-semibold text-sand-800 hover:bg-sand-200 cursor-pointer shrink-0 transition-colors';
+  const viewports = [
+    { id: "desktop", icon: Monitor, label: "Desktop" },
+    { id: "tablet", icon: Tablet, label: "Tablet" },
+    { id: "mobile", icon: Smartphone, label: "Mobile" }
+  ];
+  const showPreview = tab === "preview" && canPreview;
 
-            {!onClose && (
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className='hidden lg:flex items-center justify-center w-7 h-7 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/[0.06] transition-colors bg-transparent border-none cursor-pointer'
-                title={isExpanded ? "Collapse width" : "Expand width"}
-              >
-                {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-              </button>
-            )}
-          </div>
+  const renderPanel = (onClose, showExpand) => (
+    <div className='h-full flex flex-col rounded-panel bg-sand-100 shadow-soft-md overflow-hidden'>
+      <div className='flex items-center flex-wrap gap-2 py-3 pr-3 pl-4'>
+        <span className='w-8 h-8 rounded-full grid place-items-center bg-sage-200 text-sage-800 shrink-0'>
+          <Code2 size={15} />
+        </span>
+        <div className='flex-1 min-w-30 font-display text-[17px] truncate'>
+          {artifacts[0]?.title || "Preview"}
         </div>
+        {canPreview && (
+          <div className='inline-flex overflow-hidden rounded-full border border-line bg-canvas'>
+            {[{ id: "preview", icon: Eye, label: "Preview" }, { id: "code", icon: Code2, label: "Code" }].map(({ id, icon: Icon, label }, i) => (
+              <button
+                key={id}
+                onClick={() => setTab(id)}
+                className={`flex items-center gap-1.5 px-3 py-1.75 text-[13px] font-semibold cursor-pointer transition-colors ${i ? "border-l border-line" : ""} ${tab === id ? "bg-clay text-canvas" : "hover:bg-ink/7"}`}
+              >
+                <Icon size={13} />{label}
+              </button>
+            ))}
+          </div>
+        )}
+        {showExpand && (
+          <button className={iconBtn} onClick={() => setIsExpanded(!isExpanded)} title={isExpanded ? "Narrow panel" : "Widen panel"}>
+            {isExpanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+          </button>
+        )}
+        <button className={iconBtn} onClick={onClose} title="Close preview">
+          <X size={17} />
+        </button>
+      </div>
 
-        {/* Sub-toolbar */}
-        {tab === "code" ? (
-          <div className='h-10 flex items-center justify-between border-b border-white/[0.06] px-2 bg-black/20 shrink-0'>
-            <div className='flex items-center overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
+      <div className='flex items-center justify-between gap-2 pr-3 pb-3 pl-4'>
+        {showPreview ? (
+          <>
+            <div className='flex gap-0.5 p-0.75 rounded-full bg-sand-200'>
+              {viewports.map(({ id, icon: Icon, label }) => (
+                <button
+                  key={id}
+                  title={label}
+                  onClick={() => setViewportMode(id)}
+                  className={`w-8 h-7 rounded-full grid place-items-center cursor-pointer transition-colors ${viewportMode === id ? "bg-sand-100 text-ink shadow-soft-sm" : "text-sand-700"}`}
+                >
+                  <Icon size={14} />
+                </button>
+              ))}
+            </div>
+            <div className='flex gap-0.5'>
+              <button className={iconBtn} onClick={() => setRefreshKey(k => k + 1)} title="Reload preview">
+                <RotateCw size={14} />
+              </button>
+              <button className={textBtn} onClick={handleOpenInNewTab}>
+                <ExternalLink size={13} />
+                Open in new tab
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className='flex gap-0.5 overflow-x-auto no-scrollbar'>
               {artifacts[0]?.files?.map((f, index) => (
                 <button
                   key={index}
                   onClick={() => setActiveFile(index)}
-                  className={`px-3 py-1.5 text-[11.5px] font-medium whitespace-nowrap transition-colors border-none relative cursor-pointer rounded-md ${activeFile === index ? "bg-white/[0.08] text-indigo-400" : "bg-transparent text-slate-400 hover:text-slate-200"}`}
+                  className={`h-7.5 px-3 rounded-full font-mono text-xs whitespace-nowrap cursor-pointer transition-colors hover:bg-sand-200 ${activeFile === index ? "bg-sand-300 text-ink" : "text-sand-700"}`}
                 >
                   {f?.name}
                 </button>
               ))}
             </div>
-            <button
-              onClick={handleCopy}
-              className='flex items-center gap-1 px-2 py-1 rounded-md text-[11px] text-slate-400 hover:text-slate-200 hover:bg-white/[0.06] transition-colors bg-transparent border-none cursor-pointer shrink-0'
-              title="Copy code"
-            >
-              {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-              <span>{copied ? "Copied" : "Copy"}</span>
+            <button className={textBtn} onClick={handleCopy}>
+              {copied ? <Check size={13} /> : <Copy size={13} />}
+              {copied ? "Copied" : "Copy"}
             </button>
+          </>
+        )}
+      </div>
+
+      <div className='flex-1 min-h-0 mx-3 mb-3 rounded-card overflow-hidden bg-sand-200'>
+        {showPreview ? (
+          <div className='h-full flex justify-center p-2'>
+            <iframe
+              key={refreshKey}
+              title='Artifact preview'
+              srcDoc={previewDoc}
+              sandbox='allow-scripts allow-modals allow-forms allow-same-origin allow-popups'
+              className='h-full max-w-full border-none rounded-xl bg-white shadow-soft-sm transition-[width] duration-250'
+              style={{ width: getViewportWidth() }}
+            />
           </div>
         ) : (
-          <div className='h-10 flex items-center justify-between border-b border-white/[0.06] px-3 bg-black/20 shrink-0'>
-            {/* Viewport switcher */}
-            <div className='flex items-center gap-1 bg-white/[0.03] p-0.5 rounded-md border border-white/[0.05]'>
-              <button
-                onClick={() => setViewportMode("desktop")}
-                className={`p-1 rounded text-slate-400 hover:text-slate-200 transition-colors border-none cursor-pointer ${viewportMode === "desktop" ? "bg-white/[0.1] text-white" : "bg-transparent"}`}
-                title="Desktop View (100%)"
-              >
-                <Monitor size={12} />
-              </button>
-              <button
-                onClick={() => setViewportMode("tablet")}
-                className={`p-1 rounded text-slate-400 hover:text-slate-200 transition-colors border-none cursor-pointer ${viewportMode === "tablet" ? "bg-white/[0.1] text-white" : "bg-transparent"}`}
-                title="Tablet View"
-              >
-                <Tablet size={12} />
-              </button>
-              <button
-                onClick={() => setViewportMode("mobile")}
-                className={`p-1 rounded text-slate-400 hover:text-slate-200 transition-colors border-none cursor-pointer ${viewportMode === "mobile" ? "bg-white/[0.1] text-white" : "bg-transparent"}`}
-                title="Mobile View"
-              >
-                <Smartphone size={12} />
-              </button>
-            </div>
-
-            <div className='flex items-center gap-1.5'>
-              <button
-                onClick={() => setRefreshKey(k => k + 1)}
-                className='flex items-center justify-center w-6 h-6 rounded text-slate-400 hover:text-slate-200 hover:bg-white/[0.06] transition-colors bg-transparent border-none cursor-pointer'
-                title="Refresh preview"
-              >
-                <RotateCw size={12} />
-              </button>
-              <button
-                onClick={handleOpenInNewTab}
-                className='flex items-center gap-1 px-2 py-1 rounded text-[11px] text-slate-400 hover:text-slate-200 hover:bg-white/[0.06] transition-colors bg-transparent border-none cursor-pointer'
-                title="Open in new window"
-              >
-                <ExternalLink size={11} />
-                <span>Popout</span>
-              </button>
-            </div>
-          </div>
+          <Editor
+            theme='organic'
+            beforeMount={defineTheme}
+            language={detectLanguage(file?.name)}
+            value={file?.content || ""}
+            options={{
+              readOnly: true,
+              minimap: { enabled: false },
+              fontSize: 12.5,
+              wordWrap: "on",
+              automaticLayout: true,
+              scrollBeyondLastLine: false,
+              padding: { top: 16, bottom: 16 },
+              lineNumbers: "on",
+              renderLineHighlight: "none"
+            }}
+          />
         )}
-
-        {/* Body content */}
-        <div className='flex-1 overflow-hidden relative bg-[#090b0e]'>
-          {tab === "preview" && canPreview ? (
-            <div className='w-full h-full flex items-center justify-center p-2 sm:p-3 overflow-auto bg-[#08090c]'>
-              <div 
-                className='h-full rounded-xl overflow-hidden shadow-2xl border border-white/[0.08] transition-all duration-300 flex flex-col bg-white'
-                style={{ 
-                  width: getViewportWidth(),
-                  maxWidth: "100%"
-                }}
-              >
-                <iframe 
-                  key={refreshKey}
-                  title='preview' 
-                  srcDoc={previewDoc} 
-                  sandbox='allow-scripts allow-modals allow-forms allow-same-origin allow-popups' 
-                  className='w-full h-full bg-white border-none flex-1' 
-                />
-              </div>
-            </div>
-          ) : (
-            <div className='w-full h-full'>
-              <Editor
-                theme='vs-dark'
-                language={detectLanguage(file?.name)}
-                value={file?.content || ""}
-                options={{
-                  readOnly: true,
-                  minimap: { enabled: false },
-                  fontSize: 13,
-                  wordWrap: "on",
-                  automaticLayout: true,
-                  scrollBeyondLastLine: false,
-                  padding: { top: 14, bottom: 14 },
-                  lineNumbers: "on",
-                  renderLineHighlight: "none"
-                }}
-              />
-            </div>
-          )}
-        </div>
       </div>
-    );
-  };
+    </div>
+  );
 
   return (
     <>
-      {/* Mobile button */}
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed bottom-24 right-4 z-40 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[12px] font-medium shadow-lg shadow-indigo-500/20 border-none cursor-pointer transition-colors duration-150"
-      >
-        <Eye size={13} />
-        View App Preview
-      </button>
-
-      {/* Mobile Drawer */}
+      {/* Mobile overlay */}
       <AnimatePresence>
-        {mobileOpen && (
+        {mobileArtifactOpen && (
           <>
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
-              transition={{ duration: 0.2 }} 
-              onClick={() => setMobileOpen(false)} 
-              className="lg:hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => dispatch(setMobileArtifactOpen(false))}
+              className="lg:hidden fixed inset-0 z-44 bg-sand-900/35"
             />
-            <motion.div 
-              initial={{ x: "100%" }} 
-              animate={{ x: 0 }} 
-              exit={{ x: "100%" }} 
-              transition={{ duration: 0.25, ease: "easeInOut" }} 
-              className="lg:hidden fixed inset-y-0 right-0 z-50 w-[92vw] max-w-[500px] border-l border-white/[0.08] overflow-hidden shadow-2xl"
+            <motion.section
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+              className="lg:hidden fixed inset-y-0 right-0 z-45 w-full max-w-125 p-2"
             >
-              <PanelContent onClose={() => setMobileOpen(false)} />
-            </motion.div>
+              {renderPanel(() => dispatch(setMobileArtifactOpen(false)), false)}
+            </motion.section>
           </>
         )}
       </AnimatePresence>
 
-      {/* Desktop Panel */}
-      {!collapsed ? (
-        <motion.div
+      {/* Desktop panel */}
+      {artifactOpen && (
+        <motion.section
+          initial={false}
           animate={{ width: isExpanded ? 780 : 520 }}
           transition={{ duration: 0.25, ease: "easeInOut" }}
-          className='hidden lg:flex h-full border-l border-white/[0.06] flex-col overflow-hidden shrink-0'
+          className='hidden lg:block h-full shrink-0 py-3 pr-3'
         >
-          <PanelContent />
-        </motion.div>
-      ) : (
-        <div className='hidden lg:flex flex-col h-full bg-[#0d0f14] items-center py-4 gap-3 shrink-0 w-12 border-l border-white/[0.06]'>
-          <button 
-            className='flex items-center justify-center w-7 h-7 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/[0.065] transition-colors bg-transparent border-none cursor-pointer shrink-0' 
-            onClick={() => setCollapsed(false)}
-            title="Open Artifacts Panel"
-          >
-            <PanelRightClose size={16} className="transform rotate-180" />
-          </button>
-          <div className='flex items-center gap-2 flex-1 min-w-0'>
-            <div 
-              className='text-[11px] font-medium text-slate-500 tracking-wider uppercase whitespace-nowrap'
-              style={{
-                writingMode: "vertical-lr",
-                transform: "rotate(180deg)"
-              }}
-            >
-              {artifacts[0]?.title || "Artifact Preview"}
-            </div>
-          </div>
-        </div>
+          {renderPanel(() => dispatch(setArtifactOpen(false)), true)}
+        </motion.section>
       )}
     </>
   );

@@ -34,6 +34,15 @@ const conversationSlice=createSlice({
                 state.selectedConversation = { ...state.selectedConversation, title };
             }
         },
+        // Rename in place, without moving the chat in the list
+        renameConversation: (state, action) => {
+            const { conversationId, title } = action.payload;
+            const target = state.conversations.find(conv => conv?._id === conversationId);
+            if (target) target.title = title;
+            if (state.selectedConversation?._id === conversationId) {
+                state.selectedConversation = { ...state.selectedConversation, title };
+            }
+        },
         removeConversation: (state, action) => {
             const conversationId = action.payload;
             state.conversations = state.conversations.filter(c => c?._id !== conversationId);
@@ -59,5 +68,5 @@ const conversationSlice=createSlice({
     
 })
 
-export const { setConversations, addConversation, setSelectedConversation, setConvTitle, removeConversation, updatePinState } = conversationSlice.actions;
+export const { setConversations, addConversation, setSelectedConversation, setConvTitle, renameConversation, removeConversation, updatePinState } = conversationSlice.actions;
 export default conversationSlice.reducer
