@@ -125,7 +125,7 @@ function BillingDraw() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 z-60 bg-sand-900/45"
+                        className="fixed inset-0 z-60 bg-scrim/45"
                     />
 
                     <motion.aside

@@ -42,7 +42,7 @@ function Home() {
       <Artifact />
       <BillingDraw />
       {!userData && (
-        <div className='fixed inset-0 z-80 grid place-items-center p-4 bg-sand-900/50 backdrop-blur-sm'>
+        <div className='fixed inset-0 z-80 grid place-items-center p-4 bg-scrim/50 backdrop-blur-sm'>
           <div className='w-full max-w-100 flex flex-col gap-4 px-6 pt-9 pb-6 rounded-[32px] bg-canvas shadow-soft-lg'>
             <div className='w-12 h-12 rounded-full bg-clay text-canvas grid place-items-center font-display text-2xl'>M</div>
             <div className='flex flex-col gap-1.5'>
@@ -53,7 +53,7 @@ function Home() {
               className='w-full h-12 flex items-center justify-center gap-2.5 rounded-full bg-clay hover:bg-clay-600 active:bg-clay-700 text-canvas text-[15px] font-semibold cursor-pointer transition-colors'
               onClick={googleLogin}
             >
-              <FcGoogle size={17} className='bg-canvas rounded-full p-px' />
+              <FcGoogle size={17} className='bg-white rounded-full p-px' />
               Continue with Google
             </button>
           </div>

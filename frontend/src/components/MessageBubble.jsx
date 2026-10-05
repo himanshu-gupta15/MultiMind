@@ -134,11 +134,11 @@ function MessageBubble({role,content,images = [],artifacts}) {
       }
       const language = className?.replace("language-", "") || "text";
       return (
-        <div className='rounded-card bg-sand-900 overflow-hidden'>
-          <div className='flex items-center justify-between py-2 pr-2.5 pl-4 bg-sand-100/6'>
-            <span className='text-xs font-semibold uppercase tracking-[.06em] text-sand-400'>{language}</span>
+        <div className='rounded-card bg-code overflow-hidden'>
+          <div className='flex items-center justify-between py-2 pr-2.5 pl-4 bg-white/5'>
+            <span className='text-xs font-semibold uppercase tracking-[.06em] text-[#c0b6a5]'>{language}</span>
             <button
-              className='flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs text-sand-300 hover:bg-sand-100/12 cursor-pointer transition-colors'
+              className='flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs text-[#dcd3c4] hover:bg-white/10 cursor-pointer transition-colors'
               onClick={() => copyCode(value)}
             >
               {copiedCode === value ? <Check size={13} /> : <Copy size={13} />}
@@ -206,7 +206,7 @@ function MessageBubble({role,content,images = [],artifacts}) {
         )}
       </div>
       {lightBox && (
-        <div onClick={() => setLightBox(null)} className='fixed inset-0 z-90 bg-sand-900/80 backdrop-blur-sm flex items-center justify-center p-6'>
+        <div onClick={() => setLightBox(null)} className='fixed inset-0 z-90 bg-scrim/80 backdrop-blur-sm flex items-center justify-center p-6'>
           <button className='absolute top-4 right-4 w-10 h-10 rounded-full grid place-items-center bg-sand-100 text-ink cursor-pointer' onClick={() => setLightBox(null)} title="Close">
             <X size={18} />
           </button>

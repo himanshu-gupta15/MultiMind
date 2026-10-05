@@ -1,5 +1,5 @@
 import React from 'react'
-import { LogOut, MessageSquare, PanelLeft, Plus, X, MoreHorizontal, Pin, PinOff, Trash2, Pencil } from "lucide-react"
+import { LogOut, MessageSquare, PanelLeft, Plus, X, MoreHorizontal, Pin, PinOff, Trash2, Pencil, Sun, Moon } from "lucide-react"
 import { useDispatch, useSelector } from 'react-redux'
 import { getConversation } from '../features/getConveration'
 import { setConversations, setSelectedConversation, removeConversation, updatePinState, renameConversation } from '../redux/conversationSlice'
@@ -10,6 +10,7 @@ import logOut from '../features/logOut'
 import { setBillingOpen, setSidebarOpen } from '../redux/uiSlice'
 import { useState, useEffect, useRef } from 'react'
 import { setUserdata } from '../redux/userSlice.js'
+import useTheme from '../hooks/useTheme'
 
 function Sidebar() {
     const [collapsed, setCollapsed] = useState(false)
@@ -18,6 +19,7 @@ function Sidebar() {
     const { conversations, selectedConversation } = useSelector((state) => state.conversation)
     const { userData } = useSelector(state => state.user)
     const { sidebarOpen } = useSelector(state => state.ui)
+    const { theme, toggleTheme } = useTheme()
     const [openMenuId, setOpenMenuId] = useState(null);
     const menuRef = useRef(null);
     const [editingId, setEditingId] = useState(null);
@@ -320,11 +322,14 @@ function Sidebar() {
                         );
                     })}
                 </div>
+                <button className={iconBtn} onClick={toggleTheme} title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
+                    {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+                </button>
                 {renderAvatar()}
             </aside>
 
             {/* Mobile backdrop */}
-            {sidebarOpen && <div onClick={() => dispatch(setSidebarOpen(false))} className='lg:hidden fixed inset-0 z-39 bg-sand-900/40' />}
+            {sidebarOpen && <div onClick={() => dispatch(setSidebarOpen(false))} className='lg:hidden fixed inset-0 z-39 bg-scrim/40' />}
 
             {/* Full sidebar: drawer on mobile, column on desktop */}
             <aside
@@ -398,6 +403,9 @@ function Sidebar() {
                                     {userData?.plan || "free"}
                                 </span>
                             </div>
+                            <button className={iconBtn} onClick={toggleTheme} title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
+                                {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+                            </button>
                             <button
                                 className={iconBtn}
                                 title="Sign out"

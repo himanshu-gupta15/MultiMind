@@ -283,7 +283,7 @@ function Artifact() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={() => dispatch(setMobileArtifactOpen(false))}
-              className="lg:hidden fixed inset-0 z-44 bg-sand-900/35"
+              className="lg:hidden fixed inset-0 z-44 bg-scrim/35"
             />
             <motion.section
               initial={{ x: "100%" }}

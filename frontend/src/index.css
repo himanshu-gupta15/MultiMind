@@ -46,9 +46,60 @@
   --radius-card: 16px;
   --radius-panel: 28px;
 
+  --color-scrim: #2e2b25;
+  --color-code: #2e2b25;
+
   --shadow-soft-sm: 0 1px 2px color-mix(in srgb, #2e2b25 14%, transparent);
   --shadow-soft-md: 0 3px 10px color-mix(in srgb, #2e2b25 16%, transparent);
   --shadow-soft-lg: 0 12px 32px color-mix(in srgb, #2e2b25 22%, transparent);
+}
+
+/* Dark theme: same roles, ramps flipped so "100" is still the raised surface
+   and "700-900" is still the readable text end. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-canvas: #1c1a17;
+  --color-surface: #25221e;
+  --color-ink: #f1e9dc;
+  --color-line: color-mix(in srgb, #f1e9dc 14%, transparent);
+
+  --color-sand-100: #2f2b26;
+  --color-sand-200: #3a352f;
+  --color-sand-300: #4a443c;
+  --color-sand-400: #5e574d;
+  --color-sand-500: #7a7164;
+  --color-sand-600: #968c7d;
+  --color-sand-700: #b0a695;
+  --color-sand-800: #cbc1b0;
+  --color-sand-900: #e6dccb;
+
+  --color-clay-100: #36231a;
+  --color-clay-200: #4a2e1f;
+  --color-clay-300: #6a3f25;
+  --color-clay-400: #8f5530;
+  --color-clay-500: #b2622d;
+  --color-clay-600: #d67f48;
+  --color-clay-700: #f0a06b;
+  --color-clay-800: #ffc6a5;
+  --color-clay-900: #ffe1d0;
+
+  --color-sage-100: #222a19;
+  --color-sage-200: #2e3822;
+  --color-sage-300: #3d4a2d;
+  --color-sage-400: #56633f;
+  --color-sage-500: #728157;
+  --color-sage-600: #8fa073;
+  --color-sage-700: #aebf92;
+  --color-sage-800: #ccdbb2;
+  --color-sage-900: #e1eecc;
+
+  --color-scrim: #000000;
+  --color-code: #14120f;
+
+  --shadow-soft-sm: 0 0 0 1px color-mix(in srgb, #f1e9dc 6%, transparent);
+  --shadow-soft-md: 0 0 0 1px color-mix(in srgb, #f1e9dc 7%, transparent), 0 4px 14px rgb(0 0 0 / 0.35);
+  --shadow-soft-lg: 0 0 0 1px color-mix(in srgb, #f1e9dc 8%, transparent), 0 14px 36px rgb(0 0 0 / 0.5);
 }
 
 html,
