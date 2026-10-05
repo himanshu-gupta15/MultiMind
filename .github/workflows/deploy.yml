@@ -178,6 +178,10 @@ jobs:
   deploy-frontend:
     needs: deploy-backend
     runs-on: ubuntu-latest
+    # Shows a "Deployments" section with this link on the repo page
+    environment:
+      name: production
+      url: https://d2pplrl0246irj.cloudfront.net
 
     steps:
       - name: Checkout
