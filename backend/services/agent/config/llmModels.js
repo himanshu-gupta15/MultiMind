@@ -18,10 +18,19 @@ const getOpenRouter = () => {
     return openrouterInstance;
 };
 
-const getGroq = () => {
-    if (!process.env.GROQ_API_KEY) {
-        return getGemini();
+const createGemini = () => {
+    if (!process.env.GOOGLE_API_KEY) return null;
+    if (!geminiInstance) {
+        geminiInstance = new ChatGoogleGenerativeAI({
+            model: "gemini-2.5-flash",
+            apiKey: process.env.GOOGLE_API_KEY
+        });
     }
+    return geminiInstance;
+};
+
+const createGroq = () => {
+    if (!process.env.GROQ_API_KEY) return null;
     if (!groqInstance) {
         groqInstance = new ChatGroq({
             model: "openai/gpt-oss-120b",
@@ -31,18 +40,15 @@ const getGroq = () => {
     return groqInstance;
 };
 
-const getGemini = () => {
-    if (!process.env.GOOGLE_API_KEY) {
-        return getGroq();
-    }
-    if (!geminiInstance) {
-        geminiInstance = new ChatGoogleGenerativeAI({
-            model: "gemini-2.5-flash",
-            apiKey: process.env.GOOGLE_API_KEY
-        });
-    }
-    return geminiInstance;
+// Groq first; if it fails (e.g. 401 invalid key, rate limit), retry on Gemini
+const getGroq = () => {
+    const groq = createGroq();
+    const gemini = createGemini();
+    if (groq && gemini) return groq.withFallbacks([gemini]);
+    return groq || gemini || getOpenRouter();
 };
+
+const getGemini = () => createGemini() || createGroq() || getOpenRouter();
 
 export const getModel = async (agent) => {
     switch (agent) {
