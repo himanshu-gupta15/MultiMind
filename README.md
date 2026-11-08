@@ -2,10 +2,13 @@
 
 > **Production-grade, distributed Multi-Agent AI platform featuring autonomous workflow orchestration with LangGraph, live web sandboxing, document RAG, multimodal vision, real-time web search, and credit-based subscription billing.**
 
-[![CI/CD Pipeline](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?logo=github-actions&logoColor=white)](https://github.com/himanshu-gupta15/MultiMind)
+**🌐 Live Demo:** [multimind-web.onrender.com](https://multimind-web.onrender.com) *(free tier: the first request after 15 min of inactivity can take ~1 min while the backend wakes up)*
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Online-2EA44F?logo=render&logoColor=white)](https://multimind-web.onrender.com)
+[![Continuous Deployment](https://img.shields.io/badge/CD-Render%20Auto--Deploy-46E3B7?logo=render&logoColor=white)](https://github.com/himanshu-gupta15/MultiMind)
 [![Architecture](https://img.shields.io/badge/Architecture-Microservices-orange?logo=node.js&logoColor=white)](https://github.com/himanshu-gupta15/MultiMind)
 [![Orchestration](https://img.shields.io/badge/Agent%20Engine-LangGraph-1C3C3C?logo=langchain&logoColor=white)](https://github.com/himanshu-gupta15/MultiMind)
-[![Cloud](https://img.shields.io/badge/Deployment-AWS%20ECS%20%7C%20CloudFront-232F3E?logo=amazon-aws&logoColor=white)](https://github.com/himanshu-gupta15/MultiMind)
+[![Cloud](https://img.shields.io/badge/Deployment-Render-46E3B7?logo=render&logoColor=white)](https://multimind-web.onrender.com)
 [![Frontend](https://img.shields.io/badge/Frontend-React%2019%20%7C%20Vite%208-61DAFB?logo=react&logoColor=white)](https://github.com/himanshu-gupta15/MultiMind)
 
 ---
@@ -99,7 +102,7 @@ User Prompt (+ Optional File) ──> Chatinput Component
                            │         │     ├── [chat]           ──> Groq / Gemini + Memory
                            │         │     ├── [coding]         ──> Gemini + JSON Artifacts Parser
                            │         │     ├── [search]         ──> Tavily / DuckDuckGo ──> [chat]
-                           │         │     ├── [pdf] / [ppt]    ──> PDFKit / PptxGenJS ──> S3
+                           │         │     ├── [pdf] / [ppt]    ──> PDFKit / PptxGenJS ──> Data URL (or optional S3)
                            │         │     ├── [vision]         ──> Prompt Expander ──> Pollinations
                            │         │     ├── [imageAnalyzer]  ──> Gemini Vision Multimodal
                            │         │     └── [pdfRag]         ──> text-embedding-004 ──> Qdrant
@@ -141,21 +144,20 @@ flowchart TB
         Monaco["Monaco Code Editor & Sandbox"]
     end
 
-    subgraph CDNLayer ["Edge & CDN (AWS)"]
-        CloudFront["AWS CloudFront CDN"]
-        S3Frontend["AWS S3 Bucket (Static Assets / Dist)"]
+    subgraph CDNLayer ["Frontend Hosting (Render)"]
+        StaticSite["Render Static Site + CDN\n(Vite dist/)"]
     end
 
-    subgraph GatewayLayer ["API Perimeter"]
-        Gateway["API Gateway (Express :8000)"]
+    subgraph GatewayLayer ["API Perimeter (Render Web Service)"]
+        Gateway["API Gateway (Express, public $PORT)"]
         AuthMiddleware["Session Protect Middleware"]
     end
 
     subgraph CachingLayer ["State & In-Memory Store"]
-        Redis[("Redis (:6379)\n- Sessions (7d TTL)\n- Rate Limits (60s TTL)\n- Chat Memory (24h TTL)")]
+        Redis[("Render Key Value / Redis\n- Sessions (7d TTL)\n- Rate Limits (60s TTL)\n- Chat Memory (24h TTL)")]
     end
 
-    subgraph MicroservicesLayer ["Backend Microservices (Docker / AWS ECS)"]
+    subgraph MicroservicesLayer ["Backend Microservices (same Render instance, localhost ports)"]
         AuthService["Auth Service (:8001)\nFirebase Admin & Credits"]
         ChatService["Chat Service (:8002)\nThreads, Messages, Artifacts"]
         AgentService["Agent Service (:8003)\nLangGraph Multi-Agent Engine"]
@@ -175,12 +177,10 @@ flowchart TB
         Gemini["Google Gemini (2.5 Flash / Vision)"]
         Tavily["Tavily Search API"]
         Qdrant["Qdrant Vector DB"]
-        S3Storage["AWS S3 (Document & Image Artifacts)"]
         Pollinations["Pollinations AI (Image Gen)"]
     end
 
-    Browser <--> CloudFront
-    CloudFront <--> S3Frontend
+    Browser <--> StaticSite
     Browser <--> Gateway
 
     Gateway --> AuthMiddleware
@@ -204,7 +204,6 @@ flowchart TB
     AgentService <--> Gemini
     AgentService <--> Tavily
     AgentService <--> Qdrant
-    AgentService <--> S3Storage
     AgentService <--> Pollinations
 
     BillingService <--> BillingDB
@@ -235,10 +234,10 @@ flowchart TB
 | **Caching & Memory** | Redis (`ioredis`) | Session store, conversational memory, sliding window rate limits |
 | **Authentication** | Firebase Authentication, Firebase Admin SDK | Client Google sign-in and server-side cryptographic token verification |
 | **Payment Gateway** | Razorpay Node SDK, Webhook HMAC Verification | Indian Rupee (INR) order creation, checkout modal, signature verification |
-| **Object Storage** | AWS S3 (`@aws-sdk/client-s3`), Presigner | Upload and secure URL generation for generated documents/images |
-| **DevOps & Containers** | Docker, Docker Compose, AWS ECR, AWS ECS | Containerization of services, cluster task definition deployment |
-| **Hosting & CDN** | AWS S3, AWS CloudFront | Static frontend asset hosting and global edge caching |
-| **CI/CD** | GitHub Actions (`.github/workflows/deploy.yml`) | Automated build, Docker push to ECR, ECS force deploy, CloudFront invalidate |
+| **File Delivery** | Base64 Data URLs (optional S3-compatible storage via `@aws-sdk/client-s3`) | Direct download links for generated documents/images |
+| **Containers** | Docker, Docker Compose | Per-service Dockerfiles and local Redis for development |
+| **Hosting** | Render (Static Site, Web Service, Key Value) | Frontend on a CDN-backed static site; gateway + 4 services in one web service; managed Redis |
+| **Continuous Deployment** | Render auto-deploy from GitHub (`main`) | Every push to `main` rebuilds and redeploys frontend and backend |
 
 ---
 
@@ -248,9 +247,10 @@ flowchart TB
 cortexAI/
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml               # Automated AWS ECS + S3/CloudFront CI/CD pipeline
+│       └── deploy.yml               # Legacy AWS pipeline (manual trigger only)
 ├── backend/
 │   ├── docker-compose.yml           # Local development composition (Redis)
+│   ├── render-start.mjs             # Production launcher: runs gateway + 4 services in one Render instance
 │   ├── package.json                 # Shared root dependencies
 │   ├── gateway/                     # Central API Gateway (Port 8000)
 │   │   ├── Dockerfile
@@ -477,8 +477,8 @@ flowchart TD
     RouterNode -->|Image file attached| ImageAnalyzerAgent["Node: imageAnalyzer\n(Gemini 2.5 Flash Vision Multimodal)"]
     RouterNode -->|agent = 'search' or keyword match| SearchAgent["Node: searchAgent\n(Tavily API / DuckDuckGo Fallback)"]
     RouterNode -->|agent = 'coding' or keyword match| CodingAgent["Node: codingAgent\n(Gemini -> JSON Repair -> HTML/CSS/JS Artifacts)"]
-    RouterNode -->|agent = 'pdf'| PDFAgent["Node: pdfAgent\n(Gemini -> PDFKit -> S3 / Data URI)"]
-    RouterNode -->|agent = 'ppt'| PPTAgent["Node: pptAgent\n(Gemini -> PptxGenJS -> S3 / Data URI)"]
+    RouterNode -->|agent = 'pdf'| PDFAgent["Node: pdfAgent\n(Gemini -> PDFKit -> Data URI / optional S3)"]
+    RouterNode -->|agent = 'ppt'| PPTAgent["Node: pptAgent\n(Gemini -> PptxGenJS -> Data URI / optional S3)"]
     RouterNode -->|agent = 'vision'| VisionAgent["Node: visionAgent\n(Gemini Prompt Engineering -> Pollinations AI)"]
     RouterNode -->|agent = 'chat' / default| ChatAgent["Node: chatAgent\n(Groq / Gemini + Rolling Memory)"]
 
@@ -541,26 +541,49 @@ MultiMind offers a tiered credit model integrated with **Razorpay**:
 
 ## File Storage
 
-* **AWS S3 Integration:** Documents (`.pdf`, `.pptx`) and generated images (`.png`) are uploaded to an S3 bucket configured in AWS region `ap-south-1`.
-* **Presigned Access:** Downloads are securely routed using time-limited S3 presigned URLs (24-hour validity) via `@aws-sdk/s3-request-presigner`.
-* **Zero-Cloud Local Fallback:** If S3 credentials are not configured or fail, the system automatically converts binary buffers to RFC 2397 base64 Data URLs (`data:application/pdf;base64,...`), allowing 100% offline functionality.
+* **Data URL Delivery (default):** Generated documents (`.pdf`, `.pptx`) and images (`.png`) are returned as RFC 2397 base64 Data URLs (`data:application/pdf;base64,...`), so downloads work with no object storage at all. This is how the live Render deployment runs.
+* **Optional Object Storage:** If `AWS_BUCKET_NAME` and credentials are set, files are uploaded to an S3-compatible bucket and served through 24-hour presigned URLs (`@aws-sdk/s3-request-presigner`). Any upload failure falls back to Data URLs automatically.
 
 ---
 
 ## Deployment & DevOps
 
-MultiMind is fully automated for production deployment on **Amazon Web Services (AWS)** using GitHub Actions:
+MultiMind runs on **Render** and deploys automatically on every push to `main`:
 
 ```
-GitHub Push (main) ──> GitHub Actions Workflow (.github/workflows/deploy.yml)
-                           │
-                           ├── 1. Build 5 Backend Docker Containers (Gateway, Auth, Chat, Agent, Billing)
-                           ├── 2. Authenticate with AWS ECR & Push Image Tags (:latest)
-                           ├── 3. Trigger AWS ECS Force New Deployment on Cluster ("backend")
-                           ├── 4. Build Vite Frontend Bundle (npm run build -> dist/)
-                           ├── 5. Sync dist/ artifacts to AWS S3 Bucket
-                           └── 6. Invalidate AWS CloudFront Distribution Cache (/*)
+GitHub Push (main)
+   │
+   ├── multimind-web   (Render Static Site)
+   │      └── npm install && npm run build  ──>  serves frontend/dist on Render's CDN
+   │
+   ├── multimind-api   (Render Web Service, Node 20)
+   │      ├── npm install in shared/, gateway/ and each service
+   │      └── node render-start.mjs
+   │             ├── API Gateway      ──> public $PORT
+   │             ├── Auth Service     ──> 127.0.0.1:8001
+   │             ├── Chat Service     ──> 127.0.0.1:8002
+   │             ├── Agent Service    ──> 127.0.0.1:8003
+   │             └── Billing Service  ──> 127.0.0.1:8004
+   │
+   └── multimind-redis (Render Key Value): sessions, rate limits, chat memory
 ```
+
+| Service | URL |
+| :--- | :--- |
+| Frontend | https://multimind-web.onrender.com |
+| API Gateway | https://multimind-api-to52.onrender.com |
+
+**Why one web service for five processes?** On Render's free tier, each separate service sleeps on its own. A request passing through gateway → auth → agent would wait for several cold starts one after another. `render-start.mjs` runs all five Node processes in one instance: they wake together and talk over localhost. Logs are prefixed per service (`[auth]`, `[agent]`, …), and if any process crashes the instance restarts as a whole.
+
+**Production configuration on Render** (set in the dashboard, never committed):
+* `NODE_ENV=production`, `NODE_VERSION=20`, `FRONTEND_URL`, `REDIS_URL` (Key Value internal URL)
+* `AUTH_MONGODB_URI`, `CHAT_MONGODB_URI`, `AGENT_MONGODB_URI`, `BILLING_MONGODB_URI`: one database per service; the launcher maps each to that service's `MONGODB_URI`
+* AI, search, Qdrant and Razorpay keys, as listed under [Environment Variables](#environment-variables)
+* Secret file `serviceAccountKey.json` (Firebase Admin), read from `/etc/secrets/`
+
+Service-to-service URLs (`AUTH_SERVICE_URL`, `CHAT_SERVICE_URL`, …) are set to localhost by the launcher, so they don't need configuring.
+
+> The original AWS pipeline (ECR + ECS for the backend, S3 + CloudFront for the frontend) remains in `.github/workflows/deploy.yml` as a manual-trigger workflow (`workflow_dispatch`).
 
 ---
 
@@ -590,7 +613,7 @@ PORT=8001
 MONGODB_URI=mongodb+srv://<user>:<password>@cluster0.mongodb.net/auth
 REDIS_URL=redis://localhost:6379
 ```
-*(Requires `serviceAccountKey.json` inside `backend/services/auth/` for Firebase Admin)*
+*(Firebase Admin credentials are loaded from, in order: the `FIREBASE_SERVICE_ACCOUNT` env var (raw JSON), `/etc/secrets/serviceAccountKey.json` (Render secret file), or `backend/services/auth/serviceAccountKey.json` for local development. The key file is gitignored; never commit it.)*
 
 ### Chat Service (`backend/services/chat/.env`)
 ```env
@@ -616,7 +639,7 @@ OPENROUTER_API_KEY=your_openrouter_key
 QDRANT_URL=your_qdrant_api_key_or_jwt
 QDRANT_CLUSTER_ENDPOINT=https://your-cluster.qdrant.io
 
-# AWS S3 Storage
+# Optional S3-compatible storage (omit to use Data URL downloads)
 AWS_REGION=ap-south-1
 AWS_ACCESS_KEY_ID=your_aws_access_key
 AWS_SECRET_ACCESS_KEY=your_aws_secret_key
@@ -788,7 +811,7 @@ curl -X POST http://localhost:8000/api/billing/create \
 * **Why Database-per-Service?** Ensures strict isolation and loose coupling between domains. A heavy query load on chat messages or RAG operations never blocks billing transactions or user authentication.
 * **Why LangGraph for Multi-Agent Orchestration?** Enables cyclic graph structures, conditional branching, and deterministic state tracking required for multi-step agent actions (such as Search -> Synthesize -> Chat).
 * **Why Redis for Caching and Limits?** In-memory operations ensure sub-millisecond session validation, high-throughput sliding window rate limiting, and rolling conversational memory caching without stressing MongoDB.
-* **Why Hybrid Fallbacks (S3 & DuckDuckGo)?** Essential for zero-downtime developer experience. If external cloud services (AWS S3, Tavily Search) run out of quota or are unconfigured, fallback algorithms (Base64 Data URLs, DuckDuckGo parser) allow the application to remain functional.
+* **Why Hybrid Fallbacks (Data URLs & DuckDuckGo)?** Essential for zero-downtime developer experience. If external cloud services (object storage, Tavily Search) run out of quota or are unconfigured, fallback algorithms (Base64 Data URLs, DuckDuckGo parser) allow the application to remain functional.
 
 ---
 
