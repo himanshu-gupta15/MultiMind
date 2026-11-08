@@ -1,7 +1,7 @@
 import axios from 'axios' 
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_SERVER_URL || "https://d21pqukh5ynert.cloudfront.net",
+    baseURL: import.meta.env.VITE_SERVER_URL || "https://multimind-api-to52.onrender.com",
     withCredentials: true
 });
 

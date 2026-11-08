@@ -18,7 +18,7 @@ app.set("trust proxy", 1);
 app.use(morgan("dev"));
 const allowedOrigins = [
     process.env.FRONTEND_URL,
-    "https://d2pplrl0246irj.cloudfront.net",
+    "https://multimind-web.onrender.com",
     "http://localhost:5173"
 ].filter(Boolean);
 
